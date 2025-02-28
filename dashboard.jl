@@ -1,19 +1,17 @@
 ### A Pluto.jl notebook ###
-# v0.20.4
+# v0.20.1
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-    #! format: off
     quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
-    #! format: on
 end
 
 # ╔═╡ 2ec1a511-54bd-407b-8c58-0cfe2a7498c4
@@ -30,13 +28,6 @@ begin
 	Random.seed!(42)                     
 end;
 
-# ╔═╡ 5e6e5e3f-4876-418b-a989-8ec36a22d5e8
-#hideall 
-begin
-	M = @ingredients("src/Dashboard.jl")
-    using .M.Dashboard
-end
-
 # ╔═╡ 45d95a56-951c-4595-bfec-064adff3ca51
 md"""
 # Dashboard Template
@@ -47,6 +38,11 @@ md"""
 Nubmer of data points: $(@bind n Slider(1:200; default=100, show_value=true))
 
 Fraction in training set:  $(@bind frac_train Slider(0.1:0.05:0.95; default=0.5, show_value=true))
+"""
+
+# ╔═╡ b26de73e-fac1-4d8d-973c-d5cd9017558f
+md"""
+## Model Assessment
 """
 
 # ╔═╡ 7517e7e0-7b7f-45ac-9a98-ca1d73ca0939
@@ -62,8 +58,25 @@ md"""
 # ╔═╡ f7c78de3-35d8-47e0-9645-f3292c064b01
 df_all = get_data(n);
 
+# ╔═╡ cca7ee05-4a66-4325-a012-104a5f1316b7
+md"""
+## Simple model
+"""
+
+# ╔═╡ 675cf5ef-d30d-4294-a169-252c1d3e60af
+md"""
+### Fit
+"""
+
+# ╔═╡ 5b83e8e5-f6a5-4fdb-b40b-c94ad6ada29e
+(df_train, df_test) = make_train_test(df_all; frac_train);
+
 # ╔═╡ 22f067c9-9bf0-46fe-8d16-9ce2b33dc500
-data_passes = validate_data(df_all);
+begin
+	data_passes = validate_data(df_all);
+	try_fit_simple = data_passes && size(df_train,1)>=2
+	try_fit_complex = data_passes && size(df_train,1)>=3
+end;
 
 # ╔═╡ c1d88e63-c9cf-4216-a975-bbb908e02d9a
 if data_passes
@@ -72,16 +85,8 @@ else
 	md"The data has a problem."
 end
 
-# ╔═╡ 675cf5ef-d30d-4294-a169-252c1d3e60af
-md"""
-## Fit simple model
-"""
-
-# ╔═╡ 5b83e8e5-f6a5-4fdb-b40b-c94ad6ada29e
-(df_train, df_test) = make_train_test(df_all; frac_train);
-
 # ╔═╡ 13cefeaa-d2d9-4226-b1ca-1eb96b8e5d19
-if data_passes && size(df_train,1)>=2
+if try_fit_simple
 	coef_linear = fit_linear_model(df_train)
 else
 	coef_linear = zeros(2)
@@ -89,48 +94,120 @@ end;
 
 # ╔═╡ 58302c26-34ae-4bb1-8ed8-7ae0eaf87691
 md"""
-## Assess simple model
+### Assess
 """
 
 # ╔═╡ 545b7101-b2ac-445e-9093-24564afc74c8
-if data_passes
+if try_fit_simple
 	y_pred_train = predict_linear_model(df_train, coef_linear)
 	χ²_linear_train = sum(abs2.((df_train.y.-y_pred_train)./df_train.σy))
 end;
 
 # ╔═╡ 799b8f07-2b5d-42a9-98a7-197510461973
-if data_passes
+if try_fit_simple
 	y_pred_test = predict_linear_model(df_test, coef_linear)
 	χ²_linear_test = sum(abs2.((df_test.y.-y_pred_test)./df_test.σy))
 end;
 
+# ╔═╡ f1ff96a0-1c05-4549-9520-aef471262465
+md"""
+## More complex model
+"""
+
+# ╔═╡ 41c4a54e-e747-49c0-8728-2f5fea74691c
+md"""
+### Fit
+"""
+
+# ╔═╡ 9154b586-cc5e-43ca-91be-119a2e09117c
+if try_fit_complex
+	coef_quad = fit_quadratic_model(df_train)
+else
+	coef_quad = zeros(2)
+end;
+
+# ╔═╡ b4064da2-becf-488c-ac57-772f8f7200a6
+md"""
+### Assess
+"""
+
+# ╔═╡ e629d89d-ca93-434e-b6b6-ae4c215cb93b
+if try_fit_complex
+	y_pred_quad_train = predict_quadratic_model(df_train, coef_quad)
+	χ²_quad_train = sum(abs2.((df_train.y.-y_pred_quad_train)./df_train.σy))
+end;
+
+# ╔═╡ 144be1ae-46f0-4787-9ad4-a57615b6277a
+if try_fit_complex 
+	y_pred_quad_test = predict_quadratic_model(df_test, coef_quad)
+	χ²_quad_test = sum(abs2.((df_test.y.-y_pred_quad_test)./df_test.σy))
+end;
+
 # ╔═╡ 03151305-9580-4f12-a2eb-7a6f79dfc18c
 let
-if data_passes
-	plt1 = plot_linear_model(df_train,df_test,y_pred_test)
-	plt2 = plot_linear_model_residuals(df_train,df_test,y_pred_train, y_pred_test)
-	plot(plt1, plt2, layout=(2,1), size=(700,500), left_margin=5px)
-end
+	if try_fit_simple
+		plt1 = plot_linear_model(df_train,df_test,y_pred_test, title="Linear")
+		plt2 = plot_linear_model_residuals(df_train,df_test,y_pred_train, y_pred_test)
+	else
+		plt1 = plot()
+		plt2 = plot()
+	end
+	if try_fit_complex
+		plt3 = plot_linear_model(df_train,df_test,y_pred_quad_test, title="Quadratic", color=:magenta)
+		plt4 = plot_linear_model_residuals(df_train,df_test,y_pred_quad_train, y_pred_quad_test)
+	else
+		plt3 = plot()
+		plt4 = plot()
+	end
+	plot(plt1, plt3, plt2, plt4, layout=(2,2), size=(700,500), left_margin=5px)
 end
 
-# ╔═╡ 1da36448-b011-4083-8604-c1d997a5af8e
+# ╔═╡ 71711108-6450-43aa-8d34-5fe9cdc05330
 if data_passes
-md"""
-## Goodness-of-fit
-χ² for linear model MLE:  $(string(round(χ²_linear_test,digits=1))) for $(size(df_test,1)) test points.
-
-χ² for linear model MLE:  $(string(round(χ²_linear_train,digits=1))) for $(size(df_train,1)) training points.
-"""
+	df_summary = DataFrame()
+	if try_fit_simple
+		d = (; Model="Linear", 
+				χ²=χ²_linear_train, dof=size(df_train,1)-2, 
+				χ²_test=χ²_linear_test,  dof_test=size(df_test,1)-2)
+		push!(df_summary, d)
+	end
+	if try_fit_complex
+		d = (; Model="Quadratic", 
+				χ²=χ²_quad_train, dof=size(df_train,1)-3, 
+				χ²_test=χ²_quad_test,  dof_test=size(df_test,1)-3)
+		push!(df_summary, d)
+	end
+	df_summary
 else
-md"""
-Insuficient data to fit a model.
-"""
+	md"""
+	Insuficient data to fit a model.
+	"""
 end
 
 # ╔═╡ a26602d5-eb47-4655-8cf5-8fe15a2c6c1b
 md"""
-# Setup & Functions Used
+# Setup
 """
+
+# ╔═╡ c3c1ac12-4e30-463a-b5f0-aa30f83818ca
+md"""
+## Functions Used
+"""
+
+# ╔═╡ d60c4dff-4d68-4fa0-9394-c29d789271e3
+dev_mode = false
+
+# ╔═╡ 5e6e5e3f-4876-418b-a989-8ec36a22d5e8
+#hideall 
+begin
+	if dev_mode  # Helpful while developing
+	M = @ingredients("src/Dashboard.jl")
+    using .M.Dashboard
+	else  # Once functions in files are finalized
+		include("src/Dashboard.jl")
+		using .Dashboard
+	end
+end
 
 # ╔═╡ 5a2c5198-a340-4b78-8fc2-3a07a16546ec
 # hideall 
@@ -152,7 +229,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 ColorSchemes = "~3.29.0"
 DataFrames = "~1.7.0"
 LaTeXStrings = "~1.4.0"
-MLUtils = "~0.4.5"
+MLUtils = "~0.4.7"
 Plots = "~1.40.9"
 PlutoLinks = "~0.1.6"
 PlutoUI = "~0.7.23"
@@ -164,7 +241,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.11.2"
 manifest_format = "2.0"
-project_hash = "974e7fdb1a3b29a20024a71d4fe78d0dd1bac70e"
+project_hash = "1921bcc289accc408d33c78ae9cb2d31cd9202b4"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -174,9 +251,9 @@ version = "1.3.2"
 
 [[deps.Accessors]]
 deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "MacroTools"]
-git-tree-sha1 = "0ba8f4c1f06707985ffb4804fdad1bf97b233897"
+git-tree-sha1 = "3b86719127f50670efe356bc11073d84b4ed7a5d"
 uuid = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
-version = "0.1.41"
+version = "0.1.42"
 
     [deps.Accessors.extensions]
     AxisKeysExt = "AxisKeys"
@@ -191,7 +268,6 @@ version = "0.1.41"
     AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
     IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
     LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-    Requires = "ae029012-a4dd-5104-9daa-d747884805df"
     StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
     StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
     Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
@@ -199,12 +275,13 @@ version = "0.1.41"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "50c3c56a52972d78e8be9fd135bfb91c9574c140"
+git-tree-sha1 = "cd8b948862abee8f3d3e9b73a102a9ca924debb0"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "4.1.1"
-weakdeps = ["StaticArrays"]
+version = "4.2.0"
+weakdeps = ["SparseArrays", "StaticArrays"]
 
     [deps.Adapt.extensions]
+    AdaptSparseArraysExt = "SparseArrays"
     AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AliasTables]]
@@ -228,9 +305,9 @@ version = "1.11.0"
 
 [[deps.Atomix]]
 deps = ["UnsafeAtomics"]
-git-tree-sha1 = "93da6c8228993b0052e358ad592ee7c1eccaa639"
+git-tree-sha1 = "b5bb4dc6248fde467be2a863eb8452993e74d402"
 uuid = "a9b6321e-bd34-4604-b9c9-b65b8de01458"
-version = "1.1.0"
+version = "1.1.1"
 
     [deps.Atomix.extensions]
     AtomixCUDAExt = "CUDA"
@@ -245,10 +322,10 @@ version = "1.1.0"
     oneAPI = "8f75cd03-7ff8-4ecb-9b8f-daf728133b1b"
 
 [[deps.BangBang]]
-deps = ["Accessors", "ConstructionBase", "InitialValues", "LinearAlgebra", "Requires"]
-git-tree-sha1 = "e2144b631226d9eeab2d746ca8880b7ccff504ae"
+deps = ["Accessors", "ConstructionBase", "InitialValues", "LinearAlgebra"]
+git-tree-sha1 = "26f41e1df02c330c4fa1e98d4aa2168fdafc9b1f"
 uuid = "198e06fe-97b7-11e9-32a5-e1d131e6ad66"
-version = "0.4.3"
+version = "0.4.4"
 
     [deps.BangBang.extensions]
     BangBangChainRulesCoreExt = "ChainRulesCore"
@@ -708,9 +785,9 @@ version = "0.2.4"
 
 [[deps.KernelAbstractions]]
 deps = ["Adapt", "Atomix", "InteractiveUtils", "MacroTools", "PrecompileTools", "Requires", "StaticArrays", "UUIDs"]
-git-tree-sha1 = "d5bc0b079382e89bfa91433639bc74b9f9e17ae7"
+git-tree-sha1 = "80d268b2f4e396edc5ea004d1e0f569231c71e9e"
 uuid = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
-version = "0.9.33"
+version = "0.9.34"
 
     [deps.KernelAbstractions.extensions]
     EnzymeExt = "EnzymeCore"
@@ -1247,9 +1324,9 @@ version = "1.11.0"
 
 [[deps.Setfield]]
 deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
-git-tree-sha1 = "e2cc6d8c88613c05e1defb55170bf5ff211fbeac"
+git-tree-sha1 = "c5391c6ace3bc430ca630251d02ea9687169ca68"
 uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
-version = "1.1.1"
+version = "1.1.2"
 
 [[deps.ShowCases]]
 git-tree-sha1 = "7f534ad62ab2bd48591bdeac81994ea8c445e4a5"
@@ -1773,19 +1850,29 @@ version = "1.4.1+2"
 # ╟─36b5afe6-494d-4444-bd8f-466fde886040
 # ╟─c1d88e63-c9cf-4216-a975-bbb908e02d9a
 # ╟─03151305-9580-4f12-a2eb-7a6f79dfc18c
-# ╟─1da36448-b011-4083-8604-c1d997a5af8e
+# ╟─b26de73e-fac1-4d8d-973c-d5cd9017558f
+# ╟─71711108-6450-43aa-8d34-5fe9cdc05330
 # ╟─7517e7e0-7b7f-45ac-9a98-ca1d73ca0939
 # ╟─7992ba99-db91-45b1-bcdd-4be7c273417f
 # ╠═f7c78de3-35d8-47e0-9645-f3292c064b01
 # ╠═22f067c9-9bf0-46fe-8d16-9ce2b33dc500
+# ╟─cca7ee05-4a66-4325-a012-104a5f1316b7
 # ╟─675cf5ef-d30d-4294-a169-252c1d3e60af
 # ╠═5b83e8e5-f6a5-4fdb-b40b-c94ad6ada29e
 # ╠═13cefeaa-d2d9-4226-b1ca-1eb96b8e5d19
 # ╟─58302c26-34ae-4bb1-8ed8-7ae0eaf87691
 # ╠═545b7101-b2ac-445e-9093-24564afc74c8
 # ╠═799b8f07-2b5d-42a9-98a7-197510461973
+# ╟─f1ff96a0-1c05-4549-9520-aef471262465
+# ╟─41c4a54e-e747-49c0-8728-2f5fea74691c
+# ╠═9154b586-cc5e-43ca-91be-119a2e09117c
+# ╟─b4064da2-becf-488c-ac57-772f8f7200a6
+# ╠═e629d89d-ca93-434e-b6b6-ae4c215cb93b
+# ╠═144be1ae-46f0-4787-9ad4-a57615b6277a
 # ╟─a26602d5-eb47-4655-8cf5-8fe15a2c6c1b
 # ╠═2ec1a511-54bd-407b-8c58-0cfe2a7498c4
+# ╟─c3c1ac12-4e30-463a-b5f0-aa30f83818ca
+# ╠═d60c4dff-4d68-4fa0-9394-c29d789271e3
 # ╠═5e6e5e3f-4876-418b-a989-8ec36a22d5e8
 # ╟─5a2c5198-a340-4b78-8fc2-3a07a16546ec
 # ╟─00000000-0000-0000-0000-000000000001

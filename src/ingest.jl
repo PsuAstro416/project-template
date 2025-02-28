@@ -2,7 +2,7 @@ function get_data(n::Integer)
 	@assert 1 <= n <= 1000
 	x_obs = sort(rand(n))
 	σ_obs = 0.01 .* ones(n)
-	y_obs = 1.0 .+ x_obs .+ σ_obs .* randn(n)
+	y_obs = 1.0 .+ x_obs .+ 0.1 .* x_obs.^2 .+ σ_obs .* randn(n)
 	df_all = DataFrame(:x=>x_obs, :y=>y_obs, :σy=>σ_obs)
 end
 
