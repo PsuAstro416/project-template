@@ -55,9 +55,6 @@ md"""
 ## Ingest & validate data
 """
 
-# ╔═╡ f7c78de3-35d8-47e0-9645-f3292c064b01
-df_all = get_data(n);
-
 # ╔═╡ cca7ee05-4a66-4325-a012-104a5f1316b7
 md"""
 ## Simple model
@@ -67,6 +64,55 @@ md"""
 md"""
 ### Fit
 """
+
+# ╔═╡ 58302c26-34ae-4bb1-8ed8-7ae0eaf87691
+md"""
+### Assess
+"""
+
+# ╔═╡ f1ff96a0-1c05-4549-9520-aef471262465
+md"""
+## More complex model
+"""
+
+# ╔═╡ 41c4a54e-e747-49c0-8728-2f5fea74691c
+md"""
+### Fit
+"""
+
+# ╔═╡ b4064da2-becf-488c-ac57-772f8f7200a6
+md"""
+### Assess
+"""
+
+# ╔═╡ a26602d5-eb47-4655-8cf5-8fe15a2c6c1b
+md"""
+# Setup
+"""
+
+# ╔═╡ c3c1ac12-4e30-463a-b5f0-aa30f83818ca
+md"""
+## Functions Used
+"""
+
+# ╔═╡ d60c4dff-4d68-4fa0-9394-c29d789271e3
+# hideall 
+dev_mode = true
+
+# ╔═╡ 5e6e5e3f-4876-418b-a989-8ec36a22d5e8
+#hideall 
+begin
+	if dev_mode  # Helpful while developing
+		M = @ingredients("src/Dashboard.jl")
+    	using .M.Dashboard
+	else  # Once functions in files are finalized
+		include("src/Dashboard.jl")
+		using .Dashboard
+	end
+end
+
+# ╔═╡ f7c78de3-35d8-47e0-9645-f3292c064b01
+df_all = get_data(n);
 
 # ╔═╡ 5b83e8e5-f6a5-4fdb-b40b-c94ad6ada29e
 (df_train, df_test) = make_train_test(df_all; frac_train);
@@ -92,11 +138,6 @@ else
 	coef_linear = zeros(2)
 end;
 
-# ╔═╡ 58302c26-34ae-4bb1-8ed8-7ae0eaf87691
-md"""
-### Assess
-"""
-
 # ╔═╡ 545b7101-b2ac-445e-9093-24564afc74c8
 if try_fit_simple
 	y_pred_train = predict_linear_model(df_train, coef_linear)
@@ -109,27 +150,12 @@ if try_fit_simple
 	χ²_linear_test = sum(abs2.((df_test.y.-y_pred_test)./df_test.σy))
 end;
 
-# ╔═╡ f1ff96a0-1c05-4549-9520-aef471262465
-md"""
-## More complex model
-"""
-
-# ╔═╡ 41c4a54e-e747-49c0-8728-2f5fea74691c
-md"""
-### Fit
-"""
-
 # ╔═╡ 9154b586-cc5e-43ca-91be-119a2e09117c
 if try_fit_complex
 	coef_quad = fit_quadratic_model(df_train)
 else
 	coef_quad = zeros(2)
 end;
-
-# ╔═╡ b4064da2-becf-488c-ac57-772f8f7200a6
-md"""
-### Assess
-"""
 
 # ╔═╡ e629d89d-ca93-434e-b6b6-ae4c215cb93b
 if try_fit_complex
@@ -182,31 +208,6 @@ else
 	md"""
 	Insuficient data to fit a model.
 	"""
-end
-
-# ╔═╡ a26602d5-eb47-4655-8cf5-8fe15a2c6c1b
-md"""
-# Setup
-"""
-
-# ╔═╡ c3c1ac12-4e30-463a-b5f0-aa30f83818ca
-md"""
-## Functions Used
-"""
-
-# ╔═╡ d60c4dff-4d68-4fa0-9394-c29d789271e3
-dev_mode = false
-
-# ╔═╡ 5e6e5e3f-4876-418b-a989-8ec36a22d5e8
-#hideall 
-begin
-	if dev_mode  # Helpful while developing
-	M = @ingredients("src/Dashboard.jl")
-    using .M.Dashboard
-	else  # Once functions in files are finalized
-		include("src/Dashboard.jl")
-		using .Dashboard
-	end
 end
 
 # ╔═╡ 5a2c5198-a340-4b78-8fc2-3a07a16546ec
