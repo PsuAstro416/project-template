@@ -104,13 +104,13 @@ dev_mode = false
 # ╔═╡ 5e6e5e3f-4876-418b-a989-8ec36a22d5e8
 #hideall 
 begin
-	if dev_mode  # Helpful while developing
-		M = @ingredients("src/Dashboard.jl")
-    	using .M.Dashboard
-	else  # Once functions in files are finalized
+	#if dev_mode  # Helpful while developing
+	#	M = @ingredients("src/Dashboard.jl")
+    	#	using .M.Dashboard
+	#else  # Once functions in files are finalized
 		include("src/Dashboard.jl")
 		using .Dashboard
-	end
+	#end
 end
 
 # ╔═╡ f7c78de3-35d8-47e0-9645-f3292c064b01
