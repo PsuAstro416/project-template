@@ -154,7 +154,7 @@ end;
 if try_fit_complex
 	coef_quad = fit_quadratic_model(df_train)
 else
-	coef_quad = zeros(2)
+	coef_quad = zeros(3)
 end;
 
 # ╔═╡ e629d89d-ca93-434e-b6b6-ae4c215cb93b

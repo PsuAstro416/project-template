@@ -28,7 +28,7 @@ function fit_linear_model(df::AbstractDataFrame)
 	coeff_linear = fit_no_reg(design_matrix, df.y)
 end
 
-function predict_linear_model(df::AbstractDataFrame, θ::AbstractVector; order::Integer = 1)
+function predict_linear_model(df::AbstractDataFrame, θ::AbstractVector)
         design_matrix = calc_design_matrix(df.x, 1)
 	predict_general_linear_model(design_matrix, θ)
 end
